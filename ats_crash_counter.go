@@ -41,15 +41,17 @@ func (cc *Crash_counter) getDate() (string, error) {
 		return "", err
 	}
 
-	date := strings.Trim(string(dateBytes), "\n")
+	return dateToManagerLogFormt(string(dateBytes)), nil
+}
+
+func dateToManagerLogFormt(d string) string{
+	date := strings.Trim(d, "\n")
 	ds := strings.Split(date, " ")
 	// the manager.log date has two spaces when day is 1 digit
 	if len(ds[1]) == 1 {
 		date = strings.Replace(date, " ", "  ", 1)
 	}
-
-	return date, nil
-
+	return date
 }
 
 func newCrashCounter() *Crash_counter {
