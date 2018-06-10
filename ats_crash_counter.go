@@ -9,14 +9,14 @@ import (
 	"strings"
 )
 
-type Crash_counter struct {
+type crashCounter struct {
 	Filepath    string
 	Filename    string
 	Datepattern string
 	Textpattern string
 }
 
-func (cc *Crash_counter) getLogFileReverseContent() (*bufio.Reader, error) {
+func (cc *crashCounter) getLogFileReverseContent() (*bufio.Reader, error) {
 	fullfilename := cc.Filepath + "/" + cc.Filename
 	//tac - reads reverse
 	cmd := "tac " + fullfilename + "|grep -i \"" + cc.Textpattern + "\""
@@ -34,28 +34,36 @@ func (cc *Crash_counter) getLogFileReverseContent() (*bufio.Reader, error) {
 
 }
 
-func (cc *Crash_counter) getDate() (string, error) {
-	dateBytes, err := exec.Command("date", cc.Datepattern).Output()
+func (cc *crashCounter) getDate() (string, error) {
+	monthBytes, err := exec.Command("date", "+%b").Output()
 
 	if err != nil {
 		return "", err
 	}
 
-	return dateToManagerLogFormt(string(dateBytes)), nil
+	dayBytes, err := exec.Command("date", "+%d").Output()
+
+	if err != nil {
+		return "", err
+	}
+
+	return dateToManagerLogFormt(string(monthBytes), string(dayBytes)), nil
 }
 
-func dateToManagerLogFormt(d string) string{
-	date := strings.Trim(d, "\n")
-	ds := strings.Split(date, " ")
+func dateToManagerLogFormt(m, d string) string {
+	month := strings.Trim(m, "\n")
+	day := strings.Trim(d, "\n")
+
+	var date = month + " " + day
 	// the manager.log date has two spaces when day is 1 digit
-	if len(ds[1]) == 1 {
-		date = strings.Replace(date, " ", "  ", 1)
+	if len(day) == 1 {
+		date = month + "  " + day
 	}
 	return date
 }
 
-func newCrashCounter() *Crash_counter {
-	return &Crash_counter{
+func newCrashCounter() *crashCounter {
+	return &crashCounter{
 		Filepath:    "/var/log/trafficserver",
 		Filename:    "manager.log",
 		Datepattern: "+%b%e",
